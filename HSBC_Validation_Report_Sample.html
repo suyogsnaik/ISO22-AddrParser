@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HSBC File Validation Report</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Arial',sans-serif;background:#fff;color:#1a1a1a;font-size:14px}
+  .page{width:900px;margin:0 auto;padding:40px 0 60px}
+  .header-band{background:#DB0011;padding:14px 40px;display:flex;align-items:center;justify-content:space-between;margin-bottom:32px}
+  .header-band .brand{color:white;font-size:20px;font-weight:700;letter-spacing:1px}
+  .header-band .report-label{color:rgba(255,255,255,0.85);font-size:12px}
+  .status-bar{display:flex;align-items:center;gap:14px;padding:0 40px;margin-bottom:20px}
+  .status-icon svg{display:block}
+  .status-title{font-size:18px;font-weight:700}
+  .status-sub{font-size:13px;color:#555;margin-top:3px}
+  .levels{padding:0 40px 0 54px;margin-bottom:20px;border-left:4px solid #ddd;margin-left:40px}
+  .level-row{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;margin-bottom:5px}
+  hr.divider{border:none;border-top:1px solid #ddd;margin:20px 40px}
+  .section-title{font-size:13px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.05em;margin:24px 40px 12px}
+  .gen-table{width:calc(100% - 80px);margin:0 40px;border-collapse:collapse}
+  .gen-table td{padding:5px 20px 5px 0;font-size:13px;vertical-align:top}
+  .gen-label{font-weight:600;color:#222;white-space:nowrap;width:180px}
+  .gen-val{color:#444}
+  .info-grid{width:calc(100% - 80px);margin:0 40px;display:grid;grid-template-columns:1fr 1fr;border-collapse:collapse}
+  .info-head{background:#E4E8EA;padding:9px 14px;font-weight:600;font-size:13px}
+  .info-head:first-child{border-right:1px solid white}
+  .info-cell{padding:9px 14px;font-size:13px;border-bottom:1px solid #ddd}
+  .info-cell:first-child{border-right:1px solid #ddd}
+  .sum-bar{width:calc(100% - 80px);margin:0 40px;background:#EDEDED;padding:12px 16px;font-size:14px;font-weight:600;display:flex;gap:40px}
+  .sum-pair span:last-child{font-weight:400;color:#555;margin-left:6px}
+  table.err{width:calc(100% - 80px);margin:10px 40px 0;border-collapse:collapse;font-size:12px}
+  table.err th{background:#E4E8EA;padding:9px 10px;font-weight:600;text-align:left;border-bottom:1px solid #ccc}
+  table.err td{padding:9px 10px;border-bottom:1px solid #ddd;vertical-align:top}
+  .loqate-title{font-size:13px;font-weight:700;color:#185FA5;margin:24px 40px 10px;display:flex;align-items:center;gap:8px}
+  .loqate-title .new-badge{font-size:10px;font-weight:600;background:#E6F1FB;color:#0C447C;border-radius:4px;padding:2px 8px}
+  .loqate-title .count-note{font-size:11px;font-weight:400;color:#666}
+  .loq-banner{width:calc(100% - 80px);margin:0 40px 14px;background:#E6F1FB;border-left:4px solid #185FA5;padding:11px 14px;display:flex;gap:10px}
+  .loq-banner-text{font-size:12px;color:#0C447C;line-height:1.55}
+  .loq-banner-text strong{display:block;font-size:13px;margin-bottom:2px}
+  .filter-bar{width:calc(100% - 80px);margin:0 40px 12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .filt-btn{font-size:11px;padding:4px 12px;border-radius:4px;border:1px solid #bbb;background:white;color:#555;cursor:pointer}
+  .filt-btn.active{background:#185FA5;color:white;border-color:#185FA5}
+  .stat-chips{display:flex;gap:8px;margin-left:auto}
+  .chip{font-size:10px;padding:3px 9px;border-radius:10px;font-weight:600}
+  .chip-h{background:#E1F5EE;color:#085041}
+  .chip-m{background:#FAEEDA;color:#633806}
+  .instr-card{width:calc(100% - 80px);margin:0 40px 12px;border:1px solid #ddd;border-radius:8px;overflow:hidden;background:white}
+  .ic-header{background:#F5F7F8;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;border-bottom:1px solid #eee}
+  .ic-header:hover{background:#ECEEF0}
+  .ic-left{display:flex;align-items:center;gap:10px}
+  .ic-id{font-size:13px;font-weight:700;color:#222}
+  .ic-creditor{font-size:12px;color:#666}
+  .ic-right{display:flex;align-items:center;gap:10px}
+  .badge{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600}
+  .b-adr{background:#FAEEDA;color:#633806}
+  .b-ok{background:#E1F5EE;color:#085041}
+  .conf-pill{font-size:11px;display:flex;align-items:center;gap:4px}
+  .cdot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .c-h{background:#1D9E75}
+  .c-m{background:#EF9F27}
+  .chevron{font-size:11px;color:#888;transition:transform 0.2s;display:inline-block}
+  .chevron.open{transform:rotate(180deg)}
+  .tab-row{display:flex;border-bottom:1px solid #ddd;padding:0 14px}
+  .tab{padding:8px 14px;font-size:12px;cursor:pointer;border-bottom:2px solid transparent;color:#777}
+  .tab.active{border-bottom-color:#185FA5;color:#185FA5;font-weight:600}
+  .ic-body{display:grid;grid-template-columns:1fr 1fr}
+  .ic-col{padding:14px}
+  .ic-col:first-child{border-right:1px solid #eee}
+  .col-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#888;margin-bottom:8px}
+  .col-title.parsed{color:#085041}
+  .arow{display:flex;gap:8px;margin-bottom:5px;font-size:12px}
+  .atag{flex-shrink:0;min-width:72px;color:#888;font-size:11px;font-family:monospace}
+  .aval{color:#222}
+  .aval.miss{color:#A32D2D;font-style:italic}
+  .aval.parsed{color:#0F6E56;font-weight:600}
+  .atag.removed{text-decoration:line-through;color:#A32D2D}
+  .warn-box{background:#FAEEDA;border-radius:4px;padding:6px 8px;margin-bottom:8px;font-size:11px;color:#633806}
+  .xml-block{padding:14px;background:#F5F7F8;font-family:monospace;white-space:pre;overflow-x:auto;border-top:1px solid #eee;line-height:1.6;font-size:11px;color:#222}
+  .xml-tag{color:#185FA5;font-weight:700}
+  .xml-green{color:#0F6E56}
+  .ic-foot{border-top:1px solid #eee;padding:9px 14px;display:flex;align-items:center;justify-content:space-between;background:#FAFAFA}
+  .ic-foot-msg{font-size:11px;color:#888}
+  .btn-row{display:flex;gap:6px}
+  .cbtn{font-size:11px;border:1px solid #bbb;background:white;color:#222;padding:4px 12px;border-radius:4px;cursor:pointer}
+  .cbtn:hover{background:#f0f0f0}
+  .cbtn-blue{background:#185FA5;color:white;border-color:#185FA5}
+  .cbtn-blue:hover{background:#0C447C}
+  .no-loqate{padding:12px 14px;font-size:12px;color:#555;display:flex;align-items:center;gap:8px;background:#F9FFF9;border-bottom:1px solid #eee}
+  .compliant-center{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;color:#555;font-size:12px}
+  .disclaimer{width:calc(100% - 80px);margin:8px 40px;font-size:10px;color:#888;line-height:1.5}
+  .footer-band{background:#F5F7F8;border-top:1px solid #ddd;padding:14px 40px;margin-top:40px;display:flex;justify-content:space-between;align-items:center}
+  .footer-band span{font-size:11px;color:#888}
+  @media print{
+    .filt-btn,.cbtn{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .instr-card .ic-body{display:grid!important}
+    .instr-card [id^="body-"]{display:block!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="header-band">
+  <div class="brand">HSBC</div>
+  <div class="report-label">File Validation Report &nbsp;|&nbsp; develop.hsbc.com &nbsp;|&nbsp; Generated: 2026-04-19 16:11:32 UTC</div>
+</div>
+
+<div class="page">
+
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="status-icon">
+      <svg width="36" height="36" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#fb3"/><path d="M9,11.8A1.2,1.2,0,1,1,7.8,13,1.2,1.2,0,0,1,9,11.8Zm-.9-2H9.9v-6H8.1Z"/></svg>
+    </div>
+    <div>
+      <div class="status-title">File validation report &mdash; including future ISO validation</div>
+      <div class="status-sub">Validation completed successfully</div>
+    </div>
+  </div>
+  <div class="levels">
+    <div class="level-row">
+      <svg width="15" height="15" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#00847f"/><polygon points="7.22 13.55 3.59 9.92 4.86 8.65 7.22 11.01 13.14 5.08 14.41 6.36 7.22 13.55" fill="#fff"/></svg>
+      File level &mdash; Accepted
+    </div>
+    <div class="level-row">
+      <svg width="15" height="15" viewBox="0 0 18 18"><path fill="#a8000b" d="M8.31,1.68.11,15.8A.8.8,0,0,0,.8,17H17.2a.8.8,0,0,0,.69-1.2L9.69,1.68A.8.8,0,0,0,8.31,1.68Z"/><path fill="#fff" d="M8.1,5H9.9v6H8.1Zm-.35,8.58A1.25,1.25,0,1,0,9,12.33,1.25,1.25,0,0,0,7.75,13.58Z"/></svg>
+      Instruction level &mdash; Partially rejected
+    </div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- General Info -->
+  <div class="section-title">General information</div>
+  <table class="gen-table">
+    <tr><td class="gen-label">File name</td><td class="gen-val">V3_Multi_Sample.txt</td><td class="gen-label">Submission date time</td><td class="gen-val">2026-04-19T16:11:32.000Z</td></tr>
+    <tr><td class="gen-label">File format</td><td class="gen-val">XML V3 &ndash; PAIN.001.001.03</td><td class="gen-label">File reference</td><td class="gen-val">PVT260419F010</td></tr>
+    <tr><td class="gen-label">Authorisation type</td><td class="gen-val">Pre Authorisation</td><td class="gen-label">Encoding</td><td class="gen-val">EBCDIC: UTF-8</td></tr>
+    <tr><td class="gen-label">Unique transmission ID</td><td class="gen-val" colspan="3">f9dbfe03-6b1f-42eb-a8b2-69eaf6941ea0</td></tr>
+  </table>
+
+  <hr class="divider"/>
+
+  <!-- Testing File Info -->
+  <div class="section-title">Testing file information</div>
+  <div class="info-grid">
+    <div class="info-head">Debit account location</div>
+    <div class="info-head">Transaction type</div>
+    <div class="info-cell">United Kingdom (GB)</div>
+    <div class="info-cell">CHAPS payments</div>
+  </div>
+
+  <hr class="divider"/>
+
+  <!-- Validation Summary -->
+  <div class="section-title">Validation summary</div>
+  <div class="sum-bar">
+    <div class="sum-pair"><span>Total instructions</span><span>5</span></div>
+    <div class="sum-pair"><span>Accepted</span><span>2</span></div>
+    <div class="sum-pair"><span>Rejected</span><span>3</span></div>
+  </div>
+  <table class="err">
+    <thead>
+      <tr><th style="width:13%">Error code</th><th style="width:53%">Error message</th><th style="width:18%">ISO error code (v3)</th><th style="width:10%">Count</th></tr>
+    </thead>
+    <tr><td>071203</td><td>Town-Name, Country-Code are mandatory to be provided for Creditor</td><td>N/A</td><td>5</td></tr>
+    <tr><td>055538</td><td>Debtor Structured address is mandatory as name is provided</td><td>BEO7</td><td>2</td></tr>
+    <tr><td colspan="4" style="font-size:11px;color:orange;font-weight:600;border:none">* Future ISO validation, currently not in live environment.</td></tr>
+  </table>
+
+  <hr class="divider"/>
+
+  <!-- Loqate Section -->
+  <div class="loqate-title">
+    <svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#185FA5"/><text x="8" y="12" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="Arial">L</text></svg>
+    Loqate address suggestions
+    <span class="new-badge">New</span>
+    <span class="count-note">3 of 5 instructions contain AdrLine</span>
+  </div>
+
+  <div class="loq-banner">
+    <svg width="16" height="16" viewBox="0 0 18 18" style="flex-shrink:0;margin-top:1px"><circle cx="9" cy="9" r="9" fill="#185FA5"/><text x="9" y="13" text-anchor="middle" fill="white" font-size="10" font-weight="bold" font-family="Arial">i</text></svg>
+    <div class="loq-banner-text">
+      <strong>3 instructions flagged for unstructured address</strong>
+      HSBC has automatically parsed each AdrLine using Loqate. Review the suggested structured fields below &mdash; expand each instruction to see the side-by-side comparison and copy the corrected XML before resubmitting.
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <span style="font-size:12px;color:#666">Filter:</span>
+    <button class="filt-btn active" onclick="filterCards('all',this)">All instructions (5)</button>
+    <button class="filt-btn" onclick="filterCards('adrline',this)">AdrLine detected (3)</button>
+    <button class="filt-btn" onclick="filterCards('clean',this)">No issues (2)</button>
+    <div class="stat-chips">
+      <span class="chip chip-h">High confidence: 2</span>
+      <span class="chip chip-m">Medium confidence: 1</span>
+    </div>
+  </div>
+
+  <!-- Instruction 1 -->
+  <div class="instr-card" data-type="adrline">
+    <div class="ic-header" onclick="toggleCard('c1')">
+      <div class="ic-left">
+        <svg width="14" height="14" viewBox="0 0 18 18"><path fill="#a8000b" d="M8.31,1.68.11,15.8A.8.8,0,0,0,.8,17H17.2a.8.8,0,0,0,.69-1.2L9.69,1.68A.8.8,0,0,0,8.31,1.68Z"/><path fill="#fff" d="M8.1,5H9.9v6H8.1Zm-.35,8.58A1.25,1.25,0,1,0,9,12.33,1.25,1.25,0,0,0,7.75,13.58Z"/></svg>
+        <span class="ic-id">E2E: PVT260419E001</span>
+        <span class="ic-creditor">SUYOG NAIK &nbsp;&middot;&nbsp; GBP 510.24</span>
+      </div>
+      <div class="ic-right">
+        <span class="badge b-adr">AdrLine detected</span>
+        <span class="conf-pill"><span class="cdot c-h"></span><span style="color:#085041;font-weight:600">High 94%</span></span>
+        <span class="chevron open" id="chev-c1">&#9660;</span>
+      </div>
+    </div>
+    <div id="body-c1">
+      <div class="tab-row">
+        <div class="tab active" id="tab-c1-cmp" onclick="switchTab('c1','cmp')">Address comparison</div>
+        <div class="tab" id="tab-c1-xml" onclick="switchTab('c1','xml')">XML snippet</div>
+      </div>
+      <div id="pane-c1-cmp" class="ic-body">
+        <div class="ic-col">
+          <div class="col-title">Original (unstructured)</div>
+          <div class="arow"><span class="atag">AdrLine</span><span class="aval">9A UB100SL GB</span></div>
+          <div class="arow"><span class="atag">TwnNm</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">Ctry</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">PstCd</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">StrtNm</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">BldgNb</span><span class="aval miss">not provided</span></div>
+        </div>
+        <div class="ic-col">
+          <div class="col-title parsed">Loqate parsed (structured)</div>
+          <div class="arow"><span class="atag removed">AdrLine</span><span class="aval" style="color:#A32D2D;font-size:11px">Remove</span></div>
+          <div class="arow"><span class="atag">TwnNm</span><span class="aval parsed">Uxbridge</span></div>
+          <div class="arow"><span class="atag">Ctry</span><span class="aval parsed">GB</span></div>
+          <div class="arow"><span class="atag">PstCd</span><span class="aval parsed">UB10 0SL</span></div>
+          <div class="arow"><span class="atag">StrtNm</span><span class="aval parsed">High Street</span></div>
+          <div class="arow"><span class="atag">BldgNb</span><span class="aval parsed">9A</span></div>
+        </div>
+      </div>
+      <div id="pane-c1-xml" style="display:none">
+        <div class="xml-block">&lt;<span class="xml-tag">PstlAdr</span>&gt;
+  &lt;<span class="xml-tag">BldgNb</span>&gt;<span class="xml-green">9A</span>&lt;/<span class="xml-tag">BldgNb</span>&gt;
+  &lt;<span class="xml-tag">StrtNm</span>&gt;<span class="xml-green">High Street</span>&lt;/<span class="xml-tag">StrtNm</span>&gt;
+  &lt;<span class="xml-tag">PstCd</span>&gt;<span class="xml-green">UB10 0SL</span>&lt;/<span class="xml-tag">PstCd</span>&gt;
+  &lt;<span class="xml-tag">TwnNm</span>&gt;<span class="xml-green">Uxbridge</span>&lt;/<span class="xml-tag">TwnNm</span>&gt;
+  &lt;<span class="xml-tag">Ctry</span>&gt;<span class="xml-green">GB</span>&lt;/<span class="xml-tag">Ctry</span>&gt;
+&lt;/<span class="xml-tag">PstlAdr</span>&gt;</div>
+      </div>
+      <div class="ic-foot">
+        <div class="ic-foot-msg">Loqate Ref: LQT-2026041900041 &nbsp;&middot;&nbsp; Payment Batch: PVT260419B001</div>
+        <div class="btn-row">
+          <button class="cbtn" onclick="doCopy(this,'c1-xml-data')">Copy XML</button>
+        </div>
+      </div>
+      <textarea id="c1-xml-data" style="display:none">&lt;PstlAdr&gt;
+  &lt;BldgNb&gt;9A&lt;/BldgNb&gt;
+  &lt;StrtNm&gt;High Street&lt;/StrtNm&gt;
+  &lt;PstCd&gt;UB10 0SL&lt;/PstCd&gt;
+  &lt;TwnNm&gt;Uxbridge&lt;/TwnNm&gt;
+  &lt;Ctry&gt;GB&lt;/Ctry&gt;
+&lt;/PstlAdr&gt;</textarea>
+    </div>
+  </div>
+
+  <!-- Instruction 2 -->
+  <div class="instr-card" data-type="adrline">
+    <div class="ic-header" onclick="toggleCard('c2')">
+      <div class="ic-left">
+        <svg width="14" height="14" viewBox="0 0 18 18"><path fill="#a8000b" d="M8.31,1.68.11,15.8A.8.8,0,0,0,.8,17H17.2a.8.8,0,0,0,.69-1.2L9.69,1.68A.8.8,0,0,0,8.31,1.68Z"/><path fill="#fff" d="M8.1,5H9.9v6H8.1Zm-.35,8.58A1.25,1.25,0,1,0,9,12.33,1.25,1.25,0,0,0,7.75,13.58Z"/></svg>
+        <span class="ic-id">E2E: PVT260419E002</span>
+        <span class="ic-creditor">CHEN WEI LTD &nbsp;&middot;&nbsp; GBP 1,250.00</span>
+      </div>
+      <div class="ic-right">
+        <span class="badge b-adr">AdrLine detected</span>
+        <span class="conf-pill"><span class="cdot c-m"></span><span style="color:#633806;font-weight:600">Medium 71%</span></span>
+        <span class="chevron" id="chev-c2">&#9660;</span>
+      </div>
+    </div>
+    <div id="body-c2" style="display:none">
+      <div class="tab-row">
+        <div class="tab active" id="tab-c2-cmp" onclick="switchTab('c2','cmp')">Address comparison</div>
+        <div class="tab" id="tab-c2-xml" onclick="switchTab('c2','xml')">XML snippet</div>
+      </div>
+      <div id="pane-c2-cmp" class="ic-body">
+        <div class="ic-col">
+          <div class="col-title">Original (unstructured)</div>
+          <div class="arow"><span class="atag">AdrLine 1</span><span class="aval">Flat 4 Crown House</span></div>
+          <div class="arow"><span class="atag">AdrLine 2</span><span class="aval">Manchester M1 2JN UK</span></div>
+          <div class="arow"><span class="atag">TwnNm</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">Ctry</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">PstCd</span><span class="aval miss">not provided</span></div>
+        </div>
+        <div class="ic-col">
+          <div class="col-title parsed">Loqate parsed (structured)</div>
+          <div class="warn-box">&#9888; Medium confidence &mdash; please verify before use</div>
+          <div class="arow"><span class="atag removed">AdrLine</span><span class="aval" style="color:#A32D2D;font-size:11px">Remove</span></div>
+          <div class="arow"><span class="atag">FlrId</span><span class="aval parsed">Flat 4</span></div>
+          <div class="arow"><span class="atag">BldgNm</span><span class="aval parsed">Crown House</span></div>
+          <div class="arow"><span class="atag">StrtNm</span><span class="aval parsed">Crown Street</span></div>
+          <div class="arow"><span class="atag">PstCd</span><span class="aval parsed">M1 2JN</span></div>
+          <div class="arow"><span class="atag">TwnNm</span><span class="aval parsed">Manchester</span></div>
+          <div class="arow"><span class="atag">Ctry</span><span class="aval parsed">GB</span></div>
+        </div>
+      </div>
+      <div id="pane-c2-xml" style="display:none">
+        <div class="xml-block">&lt;<span class="xml-tag">PstlAdr</span>&gt;
+  &lt;<span class="xml-tag">FlrId</span>&gt;<span class="xml-green">Flat 4</span>&lt;/<span class="xml-tag">FlrId</span>&gt;
+  &lt;<span class="xml-tag">BldgNm</span>&gt;<span class="xml-green">Crown House</span>&lt;/<span class="xml-tag">BldgNm</span>&gt;
+  &lt;<span class="xml-tag">StrtNm</span>&gt;<span class="xml-green">Crown Street</span>&lt;/<span class="xml-tag">StrtNm</span>&gt;
+  &lt;<span class="xml-tag">PstCd</span>&gt;<span class="xml-green">M1 2JN</span>&lt;/<span class="xml-tag">PstCd</span>&gt;
+  &lt;<span class="xml-tag">TwnNm</span>&gt;<span class="xml-green">Manchester</span>&lt;/<span class="xml-tag">TwnNm</span>&gt;
+  &lt;<span class="xml-tag">Ctry</span>&gt;<span class="xml-green">GB</span>&lt;/<span class="xml-tag">Ctry</span>&gt;
+&lt;/<span class="xml-tag">PstlAdr</span>&gt;</div>
+      </div>
+      <div class="ic-foot">
+        <div class="ic-foot-msg">Loqate Ref: LQT-2026041900042 &nbsp;&middot;&nbsp; Payment Batch: PVT260419B002</div>
+        <div class="btn-row">
+          <button class="cbtn" onclick="doCopy(this,'c2-xml-data')">Copy XML</button>
+        </div>
+      </div>
+      <textarea id="c2-xml-data" style="display:none">&lt;PstlAdr&gt;
+  &lt;FlrId&gt;Flat 4&lt;/FlrId&gt;
+  &lt;BldgNm&gt;Crown House&lt;/BldgNm&gt;
+  &lt;StrtNm&gt;Crown Street&lt;/StrtNm&gt;
+  &lt;PstCd&gt;M1 2JN&lt;/PstCd&gt;
+  &lt;TwnNm&gt;Manchester&lt;/TwnNm&gt;
+  &lt;Ctry&gt;GB&lt;/Ctry&gt;
+&lt;/PstlAdr&gt;</textarea>
+    </div>
+  </div>
+
+  <!-- Instruction 3 -->
+  <div class="instr-card" data-type="adrline">
+    <div class="ic-header" onclick="toggleCard('c3')">
+      <div class="ic-left">
+        <svg width="14" height="14" viewBox="0 0 18 18"><path fill="#a8000b" d="M8.31,1.68.11,15.8A.8.8,0,0,0,.8,17H17.2a.8.8,0,0,0,.69-1.2L9.69,1.68A.8.8,0,0,0,8.31,1.68Z"/><path fill="#fff" d="M8.1,5H9.9v6H8.1Zm-.35,8.58A1.25,1.25,0,1,0,9,12.33,1.25,1.25,0,0,0,7.75,13.58Z"/></svg>
+        <span class="ic-id">E2E: PVT260419E003</span>
+        <span class="ic-creditor">MARIANA SILVA &nbsp;&middot;&nbsp; GBP 320.00</span>
+      </div>
+      <div class="ic-right">
+        <span class="badge b-adr">AdrLine detected</span>
+        <span class="conf-pill"><span class="cdot c-h"></span><span style="color:#085041;font-weight:600">High 89%</span></span>
+        <span class="chevron" id="chev-c3">&#9660;</span>
+      </div>
+    </div>
+    <div id="body-c3" style="display:none">
+      <div class="tab-row">
+        <div class="tab active" id="tab-c3-cmp" onclick="switchTab('c3','cmp')">Address comparison</div>
+        <div class="tab" id="tab-c3-xml" onclick="switchTab('c3','xml')">XML snippet</div>
+      </div>
+      <div id="pane-c3-cmp" class="ic-body">
+        <div class="ic-col">
+          <div class="col-title">Original (unstructured)</div>
+          <div class="arow"><span class="atag">AdrLine</span><span class="aval">22 Baker St London W1U 6JP</span></div>
+          <div class="arow"><span class="atag">TwnNm</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">Ctry</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">PstCd</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">StrtNm</span><span class="aval miss">not provided</span></div>
+          <div class="arow"><span class="atag">BldgNb</span><span class="aval miss">not provided</span></div>
+        </div>
+        <div class="ic-col">
+          <div class="col-title parsed">Loqate parsed (structured)</div>
+          <div class="arow"><span class="atag removed">AdrLine</span><span class="aval" style="color:#A32D2D;font-size:11px">Remove</span></div>
+          <div class="arow"><span class="atag">BldgNb</span><span class="aval parsed">22</span></div>
+          <div class="arow"><span class="atag">StrtNm</span><span class="aval parsed">Baker Street</span></div>
+          <div class="arow"><span class="atag">PstCd</span><span class="aval parsed">W1U 6JP</span></div>
+          <div class="arow"><span class="atag">TwnNm</span><span class="aval parsed">London</span></div>
+          <div class="arow"><span class="atag">Ctry</span><span class="aval parsed">GB</span></div>
+        </div>
+      </div>
+      <div id="pane-c3-xml" style="display:none">
+        <div class="xml-block">&lt;<span class="xml-tag">PstlAdr</span>&gt;
+  &lt;<span class="xml-tag">BldgNb</span>&gt;<span class="xml-green">22</span>&lt;/<span class="xml-tag">BldgNb</span>&gt;
+  &lt;<span class="xml-tag">StrtNm</span>&gt;<span class="xml-green">Baker Street</span>&lt;/<span class="xml-tag">StrtNm</span>&gt;
+  &lt;<span class="xml-tag">PstCd</span>&gt;<span class="xml-green">W1U 6JP</span>&lt;/<span class="xml-tag">PstCd</span>&gt;
+  &lt;<span class="xml-tag">TwnNm</span>&gt;<span class="xml-green">London</span>&lt;/<span class="xml-tag">TwnNm</span>&gt;
+  &lt;<span class="xml-tag">Ctry</span>&gt;<span class="xml-green">GB</span>&lt;/<span class="xml-tag">Ctry</span>&gt;
+&lt;/<span class="xml-tag">PstlAdr</span>&gt;</div>
+      </div>
+      <div class="ic-foot">
+        <div class="ic-foot-msg">Loqate Ref: LQT-2026041900043 &nbsp;&middot;&nbsp; Payment Batch: PVT260419B003</div>
+        <div class="btn-row">
+          <button class="cbtn" onclick="doCopy(this,'c3-xml-data')">Copy XML</button>
+        </div>
+      </div>
+      <textarea id="c3-xml-data" style="display:none">&lt;PstlAdr&gt;
+  &lt;BldgNb&gt;22&lt;/BldgNb&gt;
+  &lt;StrtNm&gt;Baker Street&lt;/StrtNm&gt;
+  &lt;PstCd&gt;W1U 6JP&lt;/PstCd&gt;
+  &lt;TwnNm&gt;London&lt;/TwnNm&gt;
+  &lt;Ctry&gt;GB&lt;/Ctry&gt;
+&lt;/PstlAdr&gt;</textarea>
+    </div>
+  </div>
+
+  <!-- Instruction 4 — clean -->
+  <div class="instr-card" data-type="clean">
+    <div class="ic-header" onclick="toggleCard('c4')">
+      <div class="ic-left">
+        <svg width="14" height="14" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#00847f"/><polygon points="7.22 13.55 3.59 9.92 4.86 8.65 7.22 11.01 13.14 5.08 14.41 6.36 7.22 13.55" fill="#fff"/></svg>
+        <span class="ic-id">E2E: PVT260419E004</span>
+        <span class="ic-creditor">JAMES THORNTON &nbsp;&middot;&nbsp; GBP 875.50</span>
+      </div>
+      <div class="ic-right">
+        <span class="badge b-ok">Structured address</span>
+        <span class="chevron" id="chev-c4">&#9660;</span>
+      </div>
+    </div>
+    <div id="body-c4" style="display:none">
+      <div class="no-loqate">
+        <svg width="14" height="14" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#00847f"/><polygon points="7.22 13.55 3.59 9.92 4.86 8.65 7.22 11.01 13.14 5.08 14.41 6.36 7.22 13.55" fill="#fff"/></svg>
+        Fully structured address provided. No Loqate parsing required.
+      </div>
+      <div class="ic-body" style="border-top:1px solid #eee">
+        <div class="ic-col">
+          <div class="col-title parsed">Structured address</div>
+          <div class="arow"><span class="atag">BldgNb</span><span class="aval parsed">14</span></div>
+          <div class="arow"><span class="atag">StrtNm</span><span class="aval parsed">Victoria Road</span></div>
+          <div class="arow"><span class="atag">PstCd</span><span class="aval parsed">SW1A 1AA</span></div>
+          <div class="arow"><span class="atag">TwnNm</span><span class="aval parsed">London</span></div>
+          <div class="arow"><span class="atag">Ctry</span><span class="aval parsed">GB</span></div>
+        </div>
+        <div class="ic-col compliant-center">
+          <svg width="28" height="28" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#00847f"/><polygon points="7.22 13.55 3.59 9.92 4.86 8.65 7.22 11.01 13.14 5.08 14.41 6.36 7.22 13.55" fill="#fff"/></svg>
+          ISO 20022 compliant
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instruction 5 — clean -->
+  <div class="instr-card" data-type="clean">
+    <div class="ic-header" onclick="toggleCard('c5')">
+      <div class="ic-left">
+        <svg width="14" height="14" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#00847f"/><polygon points="7.22 13.55 3.59 9.92 4.86 8.65 7.22 11.01 13.14 5.08 14.41 6.36 7.22 13.55" fill="#fff"/></svg>
+        <span class="ic-id">E2E: PVT260419E005</span>
+        <span class="ic-creditor">GLOBAL TRADE LTD &nbsp;&middot;&nbsp; GBP 4,200.00</span>
+      </div>
+      <div class="ic-right">
+        <span class="badge b-ok">Structured address</span>
+        <span class="chevron" id="chev-c5">&#9660;</span>
+      </div>
+    </div>
+    <div id="body-c5" style="display:none">
+      <div class="no-loqate">
+        <svg width="14" height="14" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#00847f"/><polygon points="7.22 13.55 3.59 9.92 4.86 8.65 7.22 11.01 13.14 5.08 14.41 6.36 7.22 13.55" fill="#fff"/></svg>
+        Fully structured address provided. No Loqate parsing required.
+      </div>
+      <div class="ic-body" style="border-top:1px solid #eee">
+        <div class="ic-col">
+          <div class="col-title parsed">Structured address</div>
+          <div class="arow"><span class="atag">BldgNb</span><span class="aval parsed">100</span></div>
+          <div class="arow"><span class="atag">StrtNm</span><span class="aval parsed">Canary Wharf</span></div>
+          <div class="arow"><span class="atag">PstCd</span><span class="aval parsed">E14 5AB</span></div>
+          <div class="arow"><span class="atag">TwnNm</span><span class="aval parsed">London</span></div>
+          <div class="arow"><span class="atag">Ctry</span><span class="aval parsed">GB</span></div>
+        </div>
+        <div class="ic-col compliant-center">
+          <svg width="28" height="28" viewBox="0 0 18 18"><circle cx="9" cy="9" r="9" fill="#00847f"/><polygon points="7.22 13.55 3.59 9.92 4.86 8.65 7.22 11.01 13.14 5.08 14.41 6.36 7.22 13.55" fill="#fff"/></svg>
+          ISO 20022 compliant
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    Parsed by Loqate &middot; Powered by GBG &middot; Always verify suggestions before resubmitting. HSBC is not liable for parsed address accuracy. &middot; Loqate batch ref: LQT-BATCH-2026041900010
+  </div>
+
+</div><!-- end page -->
+
+<div class="footer-band">
+  <span>HSBC File Validator &middot; develop.hsbc.com</span>
+  <span>Report generated: 2026-04-19 16:11:32 UTC &middot; File ref: PVT260419F010</span>
+  <span>&copy; HSBC Holdings plc. Confidential.</span>
+</div>
+
+<script>
+function toggleCard(id){
+  var b=document.getElementById('body-'+id);
+  var c=document.getElementById('chev-'+id);
+  var h=b.style.display==='none'||b.style.display==='';
+  b.style.display=h?'block':'none';
+  c.className='chevron'+(h?' open':'');
+}
+function switchTab(card,pane){
+  var cmp=document.getElementById('pane-'+card+'-cmp');
+  var xml=document.getElementById('pane-'+card+'-xml');
+  var tc=document.getElementById('tab-'+card+'-cmp');
+  var tx=document.getElementById('tab-'+card+'-xml');
+  if(pane==='cmp'){cmp.style.display='grid';xml.style.display='none';tc.className='tab active';tx.className='tab';}
+  else{cmp.style.display='none';xml.style.display='block';tc.className='tab';tx.className='tab active';}
+}
+function filterCards(type,btn){
+  document.querySelectorAll('.filt-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.instr-card').forEach(card=>{
+    card.style.display=(type==='all'||card.dataset.type===type)?'':'none';
+  });
+}
+function doCopy(btn,id){
+  var t=document.getElementById(id);
+  var val=t.value.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&amp;/g,'&');
+  navigator.clipboard.writeText(val).then(function(){
+    btn.textContent='✓ Copied';
+    setTimeout(function(){btn.textContent='Copy XML';},1500);
+  });
+}
+window.onload=function(){
+  toggleCard('c1');
+};
+</script>
+</body>
+</html>
